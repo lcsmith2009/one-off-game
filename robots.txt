@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lcsmith2009.github.io/one-off-game/sitemap.xml
