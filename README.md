@@ -17,3 +17,8 @@ No APIs, framework, database, or paid runtime dependency required for V1.
 
 ## Run locally
 Open `index.html` in a browser, or serve the folder with any static web server.
+
+
+## Current build
+
+V2 is the active test build. The public home routes Daily and Practice runs to `v2.html`. The game remains dependency-free and uses local browser storage only. No payment integration is enabled yet; monetization stays gated until gameplay validation passes.
