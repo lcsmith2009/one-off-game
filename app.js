@@ -1,7 +1,10 @@
+/* ONE OFF V1.0.1 - mobile boot hardening */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const KEY='oneoff-v1'; let state=JSON.parse(localStorage.getItem(KEY)||'{"runs":0,"best":0,"streak":0,"lastDaily":"","dailyScores":{}}');
+const KEY='oneoff-v1';
+let state={runs:0,best:0,streak:0,lastDaily:'',dailyScores:{}};
+try{const stored=localStorage.getItem(KEY);if(stored)state={...state,...JSON.parse(stored)}}catch(e){console.warn('Storage unavailable; continuing without saved stats',e)}
 let run={daily:false,round:0,score:0,results:[],challenges:[]}, locked=false, timer=null;
-function save(){localStorage.setItem(KEY,JSON.stringify(state));updateStats()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){} updateStats()}
 function dayKey(){return new Date().toLocaleDateString('en-CA')}
 function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 function rng(seed){return()=>((seed=Math.imul(seed^seed>>>15,1|seed),seed^=seed+Math.imul(seed^seed>>>7,61|seed))^seed>>>14)>>>0)/4294967296}
