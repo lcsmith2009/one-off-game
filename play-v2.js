@@ -1,23 +1,122 @@
-(function(){
-var qs=new URLSearchParams(location.search),daily=qs.get('mode')!=='practice',round=0,score=0,results=[],locked=false,timer=null,current=null,KEY='oneoff-v1',started=Date.now(),finishedElapsed=0;
-var todayKey=new Date().toLocaleDateString('en-CA'),priorState={};try{priorState=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}var replay=daily&&priorState.dailyScores&&priorState.dailyScores[todayKey]!==undefined,challengeNo=Math.floor((new Date(todayKey+'T00:00:00')-new Date('2026-09-23T00:00:00'))/86400000)+1;var seed=daily?hash(todayKey):(Date.now()>>>0);
-function hash(s){var h=2166136261,i;for(i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-function rnd(){seed|=0;seed=(seed+0x6D2B79F5)|0;var t=seed;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}
-function ri(a,b){return Math.floor(rnd()*(b-a+1))+a}
-var modes=['pick','type','slider','flash','pick'];
-function make(){return{mode:modes[round],target:ri(12,88)}}
-function el(id){return document.getElementById(id)}
-function render(){clearInterval(timer);locked=false;current=make();el('roundText').textContent=(daily?(replay?'REPLAY #':'DAILY #')+challengeNo+' • ':'')+'ROUND '+(round+1)+'/5';el('target').textContent=current.target;el('feedback').textContent='';el('feedback').className='feedback';el('nextBtn').classList.add('hidden');el('dots').innerHTML='';for(var d=0;d<5;d++){var x=document.createElement('i');x.className='dot '+(d<results.length?(results[d]?'good':'bad'):'');el('dots').appendChild(x)}el('arena').innerHTML='';var m=current.mode,t=current.target;el('modeLabel').textContent={pick:'PICK ONE',type:'TYPE IT',slider:'SLIDE IT',flash:'QUICK TAP'}[m];
-if(m==='pick'){el('instruction').textContent=round===4?'Final round. One perfect miss.':'Choose exactly ONE away.';var sign=rnd()>.5?1:-1,win=t+sign,vals=[win,t,t+(sign*2),t+(sign*3)];shuffle(vals);var box=document.createElement('div');box.className='choice-grid';vals.forEach(function(v){var b=document.createElement('button');b.className='choice';b.textContent=v;b.onclick=function(){answer(v)};box.appendChild(b)});el('arena').appendChild(box)}
-if(m==='type'){el('instruction').textContent='No choices. Type a number exactly ONE away.';el('arena').innerHTML='<input class="number-input" id="num" inputmode="numeric" placeholder="?"><button class="primary submit" id="submit">LOCK IT</button>';var submitTyped=function(){var n=el('num');if(n.value!=='')answer(Number(n.value))};el('submit').onclick=submitTyped;el('num').onkeydown=function(e){if(e.key==='Enter')submitTyped()}}
-if(m==='slider'){el('instruction').textContent='Slide fast. Stop exactly ONE away.';el('arena').innerHTML='<div class="slider-wrap"><div class="slider-label" id="sv">50</div><input id="range" class="slider" type="range" min="1" max="100" value="50"><div class="range-ends"><span>1</span><span>100</span></div></div><button class="primary" id="lock">LOCK IT</button>';var r=el('range');r.oninput=function(){el('sv').textContent=r.value};el('lock').onclick=function(){answer(Number(r.value))}}
-if(m==='flash'){el('instruction').textContent='Watch the countdown. Tap the big number when it reaches exactly ONE away.';var sign=rnd()>.5?1:-1,seq=[t+(sign*4),t+(sign*3),t+(sign*2),t+sign,t,t-(sign*2)];el('arena').innerHTML='<button id="flash" class="flash" style="width:100%;border:0;color:white">GET READY</button>';var b=el('flash'),i=0;setTimeout(function(){if(locked)return;b.textContent=seq[0];i=1;timer=setInterval(function(){if(i>=seq.length){clearInterval(timer);if(!locked)answer(seq[seq.length-1]);return}b.textContent=seq[i++]},650)},900);b.onclick=function(){if(b.textContent!=='GET READY')answer(Number(b.textContent))}}
-}
-function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(rnd()*(i+1)),x=a[i];a[i]=a[j];a[j]=x}}
-function answer(v){if(locked)return;locked=true;clearInterval(timer);Array.prototype.forEach.call(document.querySelectorAll('#arena button'),function(b){b.disabled=true});var good=Math.abs(v-current.target)===1;results.push(good);if(good)score++;if(navigator.vibrate){try{navigator.vibrate(good?35:[55,45,55])}catch(e){}}var f=el('feedback');f.className='feedback '+(good?'good':'bad');f.textContent=good?'✓ PERFECTLY WRONG':(v===current.target?'✕ TOO ACCURATE!':'✕ OFF BY '+Math.abs(v-current.target));var n=el('nextBtn');n.textContent=round===4?'SEE SCORE':'NEXT';n.classList.remove('hidden')}
-el('nextBtn').onclick=function(){if(round<4){round++;render()}else finish()};
-function finish(){var elapsed=Math.max(1,Math.round((Date.now()-started)/1000));finishedElapsed=elapsed;var rec=saveRun(elapsed);var blocks=results.map(function(x){return'<div class="result-box '+(x?'good':'')+'">'+(x?'✓':'×')+'</div>'}).join('');el('game').innerHTML='<div class="eyebrow">RUN COMPLETE</div><div class="score-ring"><b>'+score+'/5</b><span>ONE OFF</span></div><h2>'+(score===5?'PERFECTLY WRONG.':score>=3?'NICE MISS.':'TOO ACCURATE.')+'</h2><p>'+(score===5?'You missed every target by exactly one.':'The target is a trap. Miss better next run.')+'</p><div class="result-grid">'+blocks+'</div><div style="text-align:center;color:#8d95a5;font-weight:800;margin:10px 0 18px">'+elapsed+' SEC'+(rec&&rec.newBest?' • NEW PERFECT BEST!':'')+'</div><button id="share" class="primary">SHARE RESULT</button><a class="secondary" href="./v2.html?mode=practice&build=20260923-11">PRACTICE AGAIN</a><a class="secondary" href="./">HOME</a>';el('share').onclick=share}
-function saveRun(elapsed){try{var s=JSON.parse(localStorage.getItem(KEY)||'{"runs":0,"best":0,"streak":0,"lastDaily":"","dailyScores":{}}');s.runs=(s.runs||0)+1;s.best=Math.max(s.best||0,score);s.practiceRuns=(s.practiceRuns||0)+(daily?0:1);s.dailyRuns=(s.dailyRuns||0)+(daily?1:0);var old=s.bestPerfectTime||0;s.lastTime=elapsed;if(score===5)s.bestPerfectTime=old?Math.min(old,elapsed):elapsed;if(daily&&!replay){var today=new Date().toLocaleDateString('en-CA');s.dailyScores=s.dailyScores||{};s.dailyScores[today]=score;if(s.lastDaily!==today){var y=new Date();y.setDate(y.getDate()-1);var yd=y.toLocaleDateString('en-CA');s.streak=s.lastDaily===yd?(s.streak||0)+1:1;s.lastDaily=today}}localStorage.setItem(KEY,JSON.stringify(s));return{newBest:score===5&&(!old||elapsed<old),bestPerfectTime:s.bestPerfectTime||0}}catch(e){return null}}
-function share(){var secs=finishedElapsed||Math.max(1,Math.round((Date.now()-started)/1000));var text='ONE OFF '+(daily?(replay?'Replay #':'Daily #')+challengeNo:'Practice')+' '+score+'/5 • '+secs+'s\n'+results.map(function(x){return x?'🟩':'🟥'}).join('')+'\n🎯 Miss perfectly.';if(navigator.share){navigator.share({title:'ONE OFF',text:text,url:'https://lcsmith2009.github.io/one-off-game/'}).catch(function(){})}else if(navigator.clipboard){navigator.clipboard.writeText(text)}}
-render();
+(function () {
+  'use strict';
+  const core = OneOffCore, store = core.createStore(() => localStorage);
+  const el = id => document.getElementById(id);
+  const daily = new URLSearchParams(location.search).get('mode') !== 'practice';
+  const day = core.dayKey(), started = performance.now();
+  const challenges = core.generate(daily ? core.hash(day) : Date.now() >>> 0);
+  let replay = daily && store.read().dailyScores[day] !== undefined;
+  let round = 0, score = 0, locked = false, finished = false, timer, readyTimer, elapsed;
+  const results = [];
+  const homeURL = document.body.dataset.standalone ? '?' : './index.html';
+  const practiceURL = document.body.dataset.standalone ? '?mode=practice' : './v2.html?mode=practice&build=20';
+  function clearTimers() { clearTimeout(readyTimer); clearInterval(timer); }
+  function render() {
+    clearTimers(); locked = false;
+    const c = challenges[round], t = c.target;
+    el('roundText').textContent = (daily ? (replay ? 'REPLAY #' : 'DAILY #') + core.challengeNumber(day) + ' • ' : 'PRACTICE • ') + 'ROUND ' + (round + 1) + '/5';
+    el('target').textContent = t;
+    el('feedback').textContent = '';
+    el('feedback').className = 'feedback';
+    el('nextBtn').classList.add('hidden');
+    el('dots').innerHTML = results.map(good => '<i class="dot ' + (good ? 'good' : 'bad') + '"></i>').join('') + '<i class="dot"></i>'.repeat(5 - results.length);
+    el('arena').innerHTML = '';
+    el('modeLabel').textContent = { pick: 'PICK ONE', type: 'TYPE IT', slider: 'SLIDE IT', flash: 'QUICK TAP' }[c.mode];
+    if (c.mode === 'pick') {
+      el('instruction').textContent = round === 4 ? 'Final round. One perfect miss.' : 'Choose exactly ONE away.';
+      const box = document.createElement('div'); box.className = 'choice-grid';
+      c.choices.forEach(value => {
+        const button = document.createElement('button');
+        button.className = 'choice'; button.textContent = value; button.onclick = () => answer(value);
+        box.appendChild(button);
+      });
+      el('arena').appendChild(box);
+    }
+    if (c.mode === 'type') {
+      el('instruction').textContent = 'No choices. Type a number exactly ONE away.';
+      el('arena').innerHTML = '<label class="sr-only" for="num">Your number</label><input class="number-input" id="num" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="instruction feedback" placeholder="?"><button class="primary submit" id="submit">LOCK IT</button>';
+      const submit = () => {
+        if (locked) return;
+        const value = core.typedNumber(el('num').value);
+        if (value === null) {
+          el('num').setAttribute('aria-invalid', 'true');
+          el('feedback').className = 'feedback bad';
+          el('feedback').textContent = 'Enter a whole number first.';
+          el('num').focus(); return;
+        }
+        el('num').removeAttribute('aria-invalid'); answer(value);
+      };
+      el('submit').onclick = submit;
+      el('num').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); submit(); } };
+    }
+    if (c.mode === 'slider') {
+      el('instruction').textContent = 'Slide fast. Stop exactly ONE away.';
+      el('arena').innerHTML = '<div class="slider-wrap"><label class="slider-label" id="sv" for="range">50</label><input id="range" aria-label="Your number" aria-describedby="instruction" class="slider" type="range" min="1" max="100" value="50"><div class="range-ends" aria-hidden="true"><span>1</span><span>100</span></div></div><button class="primary" id="lock">LOCK IT</button>';
+      el('range').oninput = () => { el('sv').textContent = el('range').value; };
+      el('lock').onclick = () => answer(Number(el('range').value));
+    }
+    if (c.mode === 'flash') {
+      el('instruction').textContent = 'Tap to start. Then tap the big number when it reaches exactly ONE away. One pass only.';
+      el('arena').innerHTML = '<button id="flash" class="flash ready" aria-describedby="instruction">TAP TO START</button>';
+      const button = el('flash'); let running = false, value = null, i = 0;
+      button.onclick = () => {
+        if (!running) {
+          running = true; button.classList.remove('ready'); button.textContent = 'GET READY';
+          readyTimer = setTimeout(() => {
+            if (locked) return;
+            value = c.sequence[i++]; button.textContent = value;
+            timer = setInterval(() => {
+              if (i === c.sequence.length) { answer(value, true); return; }
+              value = c.sequence[i++]; button.textContent = value;
+            }, 650);
+          }, 900);
+        } else if (value !== null) answer(value);
+      };
+    }
+    el('modeLabel').focus();
+  }
+  function answer(value, timedOut = false) {
+    if (locked || finished) return;
+    locked = true; clearTimers();
+    document.querySelectorAll('#arena button, #arena input').forEach(control => { control.disabled = true; });
+    const target = challenges[round].target, good = Math.abs(value - target) === 1;
+    results.push(good); if (good) score++;
+    if (navigator.vibrate) { try { navigator.vibrate(good ? 35 : [55, 45, 55]); } catch (_) {} }
+    el('feedback').className = 'feedback ' + (good ? 'good' : 'bad');
+    el('feedback').textContent = good ? '✓ PERFECTLY WRONG' : timedOut ? '✕ TOO LATE • OFF BY ' + Math.abs(value - target) : value === target ? '✕ TOO ACCURATE!' : '✕ OFF BY ' + Math.abs(value - target);
+    el('nextBtn').textContent = round === 4 ? 'SEE SCORE' : 'NEXT';
+    el('nextBtn').classList.remove('hidden');
+    el('nextBtn').focus();
+  }
+  el('nextBtn').onclick = () => {
+    if (!locked || finished) return;
+    if (round < 4) { round++; render(); } else finish();
+  };
+  function finish() {
+    if (finished) return;
+    finished = true; clearTimers();
+    elapsed = Math.max(1, Math.round((performance.now() - started) / 1000));
+    const record = store.record({ daily, day, score, elapsed }); replay = record.replay;
+    const blocks = results.map((good, i) => '<div class="result-box ' + (good ? 'good' : '') + '" role="img" aria-label="Round ' + (i + 1) + ': ' + (good ? 'one off' : 'missed') + '">' + (good ? '✓' : '×') + '</div>').join('');
+    el('game').innerHTML = '<div class="eyebrow">RUN COMPLETE' + (daily ? ' • ' + (replay ? 'REPLAY #' : 'DAILY #') + core.challengeNumber(day) : ' • PRACTICE') + '</div><div class="score-ring"><b>' + score + '/5</b><span>ONE OFF</span></div><h1 class="result-title" id="resultTitle" tabindex="-1">' + (score === 5 ? 'PERFECTLY WRONG.' : score >= 3 ? 'NICE MISS.' : 'TOO ACCURATE.') + '</h1><p>' + (score === 5 ? 'You missed every target by exactly one.' : 'The target is a trap. Miss better next run.') + '</p><div class="result-grid">' + blocks + '</div><div class="record-line">' + elapsed + ' SEC' + (record.newBest ? ' • NEW PERFECT BEST!' : '') + '</div>' + (replay ? '<p class="note">Replay complete. Your first Daily score stays ' + record.state.dailyScores[day] + '/5.</p>' : '') + (!record.saved ? '<p class="note">Stats could not be saved. You can still share this result.</p>' : '') + '<button id="share" class="primary">SHARE RESULT</button><p class="note" id="shareStatus" role="status"></p><div id="shareFallback" class="hidden"><label for="shareText">Copy your result below:</label><textarea id="shareText" readonly rows="5"></textarea></div><a class="secondary" href="' + practiceURL + '">PRACTICE AGAIN</a><a class="secondary" href="' + homeURL + '">HOME</a>';
+    el('game').setAttribute('aria-labelledby', 'resultTitle');
+    el('share').onclick = share; el('resultTitle').focus();
+  }
+  async function share() {
+    const text = core.shareText({ daily, replay, day, score, elapsed, results });
+    if (navigator.share) {
+      try { await navigator.share({ title: 'ONE OFF', text }); el('shareStatus').textContent = 'Result shared.'; return; }
+      catch (error) { if (error.name === 'AbortError') return; }
+    }
+    if (navigator.clipboard) {
+      try { await navigator.clipboard.writeText(text); el('shareStatus').textContent = 'Result copied!'; return; }
+      catch (_) { /* Embedded and private browsers may deny clipboard access. */ }
+    }
+    el('shareFallback').classList.remove('hidden');
+    el('shareText').value = text; el('shareText').focus(); el('shareText').select();
+    el('shareStatus').textContent = 'Select and copy your result to share it.';
+  }
+  window.addEventListener('pagehide', clearTimers);
+  window.addEventListener('pageshow', event => { if (event.persisted && !finished) location.reload(); });
+  render();
 })();

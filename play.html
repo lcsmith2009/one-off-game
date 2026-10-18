@@ -1,1 +1,23 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0d12"><title>ONE OFF — Play</title><link rel="stylesheet" href="./style.css"></head><body><main class="shell"><header><div class="brand">ONE <span>OFF</span></div><a class="icon-btn" href="./" aria-label="Home">⌂</a></header><section class="screen active" id="game"><div class="progress"><span id="roundText">ROUND 1/5</span><div class="dots" id="dots"></div></div><div id="modeLabel" class="eyebrow"></div><div class="target-wrap"><span>TARGET</span><strong id="target">—</strong></div><p id="instruction"></p><div id="arena"></div><div id="feedback" class="feedback"></div><button id="nextBtn" class="primary hidden">NEXT</button></section></main><script src="./play-v2.js?v=1"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12"><title>ONE OFF — Play</title>
+<link rel="stylesheet" href="./style.css?build=20">
+</head>
+<body>
+<main class="shell">
+<header><div class="brand">ONE <span>OFF</span></div><a class="icon-btn" href="./index.html" aria-label="Home">⌂</a></header>
+<section class="screen active" id="game" aria-labelledby="modeLabel">
+<div class="progress"><span id="roundText">ROUND 1/5</span><div class="dots" id="dots" aria-hidden="true"></div></div>
+<h1 id="modeLabel" class="eyebrow round-heading" tabindex="-1"></h1>
+<div class="target-wrap"><span>TARGET</span><strong id="target">—</strong></div>
+<p id="instruction"></p><div id="arena"></div>
+<div id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
+<button id="nextBtn" class="primary hidden">NEXT</button>
+</section>
+<noscript><p class="lede">ONE OFF needs JavaScript to play. Enable it in your browser and reload.</p></noscript>
+</main>
+<script src="./core.js?build=20" defer></script><script src="./play-v2.js?build=20" defer></script>
+</body>
+</html>

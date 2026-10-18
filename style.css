@@ -6,3 +6,34 @@ a.primary,a.secondary{display:flex;align-items:center;justify-content:center;tex
 .feedback.good,.feedback.bad{animation:pop .18s ease-out}
 @keyframes pop{from{transform:scale(.96);opacity:.45}to{transform:scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Build 20: preserve the visual identity while improving access and small screens. */
+body,.shell{min-height:100svh}
+.shell{padding-bottom:max(38px,env(safe-area-inset-bottom));padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+a.icon-btn{display:grid;place-items:center;text-decoration:none}
+.icon-btn,.close{width:44px;height:44px;cursor:pointer}
+button,input,textarea{font-family:inherit}
+:focus-visible{outline:3px solid #b8ff39;outline-offset:4px}
+.number-input:focus-visible{outline:3px solid #b8ff39;outline-offset:4px}
+.round-heading{font-size:12px;line-height:1.3;letter-spacing:2px;margin:4px 0 10px}
+.round-heading:focus,.result-title:focus{outline:none}
+.result-title{font-size:34px;line-height:1.1;letter-spacing:-1.5px;margin:10px 0;overflow-wrap:anywhere}
+.slider-label{display:block}
+.slider{min-height:44px;cursor:pointer}
+.flash{width:100%;border:1px solid #333a49;color:#fff;cursor:pointer}
+.flash.ready{font-size:28px}
+.note{color:#a0a8b8;font-size:12px;line-height:1.5;text-align:center;margin:10px 0}
+.note:empty{display:none}
+.milestone{text-align:center;color:#b8ff39;font-size:12px;font-weight:800;margin-top:12px}
+.record-line{text-align:center;color:#a0a8b8;font-weight:800;margin:10px 0 18px}
+.progress{gap:8px;flex-wrap:wrap}
+.stats-dialog{padding:0;border:0;background:transparent;color:inherit;width:min(calc(100% - 32px),430px);max-height:calc(100svh - 32px)}
+.stats-dialog::backdrop{background:#05070bd9}
+.stats-dialog .modal-card{width:100%}
+footer{text-align:center;margin-top:28px;font-size:12px}
+footer a{color:#a0a8b8;display:inline-block;padding:12px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#shareFallback label{display:block;color:#aeb5c4;font-size:13px;margin:12px 0}
+#shareText{width:100%;background:#151923;color:#fff;border:1px solid #596275;border-radius:12px;padding:12px;font-size:14px;line-height:1.5;resize:vertical}
+.mini-stats span,.result-stats span,.modal-stats span,.target-wrap span,.range-ends{color:#9ca5b5}
+@media(max-width:360px){.rule-card{gap:12px;padding:14px}.target-demo{min-width:60px;height:60px}.rule-card small{font-size:11px}.result-title{font-size:30px}}
+@media(max-height:700px){.screen{padding-top:20px}.target-wrap{margin-top:24px}.target-wrap strong{font-size:78px}.choice-grid{margin-top:16px}.slider-wrap{margin-top:20px}.slider-label{margin-bottom:8px}.feedback{margin-top:14px;min-height:46px}.score-ring{width:160px;height:160px;margin:16px auto}}

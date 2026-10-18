@@ -1,29 +1,28 @@
-/* ONE OFF V1.0.1 - mobile boot hardening */
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const KEY='oneoff-v1';
-let state={runs:0,best:0,streak:0,lastDaily:'',dailyScores:{}};
-try{const stored=localStorage.getItem(KEY);if(stored)state={...state,...JSON.parse(stored)}}catch(e){console.warn('Storage unavailable; continuing without saved stats',e)}
-let run={daily:false,round:0,score:0,results:[],challenges:[]}, locked=false, timer=null;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){} updateStats()}
-function dayKey(){return new Date().toLocaleDateString('en-CA')}
-function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
-function rng(seed){return function(){seed|=0;seed=(seed+0x6D2B79F5)|0;let t=seed;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296}}
-function challenges(daily){let r=rng(daily?hash(dayKey()):Date.now()>>>0),modes=['pick','type','slider','flash','pick'];return modes.map((mode,i)=>({mode,target:Math.floor(r()*81)+10,r}))}
-function screen(id){$$('.screen').forEach(x=>x.classList.remove('active'));$('#'+id).classList.add('active')}
-function updateStats(){state=load();let best=state.best?state.best+'/5':'—';$('#streakHome').textContent=state.streak||0;$('#bestHome').textContent=best;$('#playsHome').textContent=state.runs||0;$('#modalRuns').textContent=state.runs||0;$('#modalBest').textContent=best;$('#modalStreak').textContent=state.streak||0;let p=$('#perfectTimeHome');if(p)p.textContent=state.bestPerfectTime?'FASTEST PERFECT • '+state.bestPerfectTime+' SEC':'';let done=state.dailyScores&&state.dailyScores[dayKey()]!==undefined,play=$('#playBtn'),milestone=$('#milestone');if(milestone){let st=state.streak||0,next=st<3?3:st<7?7:st<14?14:st<30?30:st+10;milestone.textContent=st?'🔥 '+st+' day streak • '+(next-st)+' to '+next:'Start your first streak today.'}if(done&&play){play.textContent='PLAY TODAY AGAIN • '+state.dailyScores[dayKey()]+'/5';let note=$('#returnNote');if(note)note.textContent='Today is complete. A fresh Daily arrives tomorrow.'}}
-function start(daily){clearTimeout(timer);run={daily,round:0,score:0,results:[],challenges:challenges(daily)};screen('game');render()}
-function render(){locked=false;let c=run.challenges[run.round];$('#roundText').textContent='ROUND '+(run.round+1)+'/5';$('#target').textContent=c.target;$('#feedback').textContent='';$('#feedback').className='feedback';$('#nextBtn').classList.add('hidden');$('#dots').innerHTML=Array.from({length:5},(_,i)=>'<i class="dot '+(run.results[i]===true?'good':run.results[i]===false?'bad':'')+'"></i>').join('');$('#arena').innerHTML='';
-const labels={pick:'PICK ONE',type:'TYPE IT',slider:'FEEL IT OUT',flash:'QUICK TAP'};$('#modeLabel').textContent=labels[c.mode];
-if(c.mode==='pick')pick(c);if(c.mode==='type')type(c);if(c.mode==='slider')slider(c);if(c.mode==='flash')flash(c)}
-function pick(c){$('#instruction').textContent='Choose the number exactly ONE away.';let win=c.target+(c.r()>.5?1:-1),vals=[win,c.target,c.target+(c.r()>.5?2:-2),c.target+(c.r()>.5?3:-3)].sort(()=>c.r()-.5);$('#arena').innerHTML='<div class="choice-grid">'+vals.map(v=>'<button class="choice">'+v+'</button>').join('')+'</div>';$$('.choice').forEach(b=>b.onclick=()=>answer(+b.textContent,c.target))}
-function type(c){$('#instruction').textContent='Type any number exactly ONE away. No hints.';$('#arena').innerHTML='<input class="number-input" id="num" inputmode="numeric" placeholder="?"><button class="primary submit" id="submit">LOCK IT</button>';$('#submit').onclick=()=>{let v=Number($('#num').value);if($('#num').value!=='')answer(v,c.target)}}
-function slider(c){$('#instruction').textContent='Slide fast. Stop exactly ONE away.';$('#arena').innerHTML='<div class="slider-wrap"><div class="slider-label" id="sv">50</div><input id="range" class="slider" type="range" min="1" max="100" value="50"><div class="range-ends"><span>1</span><span>100</span></div></div><button class="primary" id="lock">LOCK IT</button>';let rg=$('#range');rg.oninput=()=>$('#sv').textContent=rg.value;$('#lock').onclick=()=>answer(+rg.value,c.target)}
-function flash(c){$('#instruction').textContent='Tap when the flashing number is exactly ONE away.';$('#arena').innerHTML='<button id="flash" class="flash" style="width:100%;border:0;color:white">READY</button>';let seq=[c.target+5,c.target-3,c.target+2,c.target,c.target+(c.r()>.5?1:-1),c.target-4],i=0,b=$('#flash');timer=setInterval(()=>{b.textContent=seq[i++%seq.length]},430);b.onclick=()=>{if(b.textContent!=='READY')answer(+b.textContent,c.target)}}
-function answer(v,t){if(locked)return;locked=true;clearInterval(timer);let good=Math.abs(v-t)===1;run.results.push(good);if(good)run.score++;$('#feedback').classList.add(good?'good':'bad');$('#feedback').textContent=good?'✓ PERFECTLY WRONG':'✕ '+(v===t?'TOO ACCURATE!':'OFF BY '+Math.abs(v-t));$('#nextBtn').textContent=run.round===4?'SEE SCORE':'NEXT';$('#nextBtn').classList.remove('hidden')}
-$('#nextBtn').onclick=()=>{if(run.round<4){run.round++;render()}else finish()}
-function finish(){state.runs++;state.best=Math.max(state.best,run.score);if(run.daily){let today=dayKey();state.dailyScores[today]=run.score;if(state.lastDaily!==today){let y=new Date();y.setDate(y.getDate()-1);let yesterday=y.toLocaleDateString('en-CA');state.streak=state.lastDaily===yesterday?state.streak+1:1;state.lastDaily=today}}save();$('#score').textContent=run.score+'/5';$('#resultGrid').innerHTML=run.results.map((x,i)=>'<div class="result-box '+(x?'good':'')+'">'+(i+1)+'</div>').join('');let titles=['Absolutely not.','Rough landing.','Getting warmer.','Nice miss.','So close to wrong.','PERFECTLY WRONG.'];$('#resultTitle').textContent=titles[run.score];$('#resultCopy').textContent=run.score===5?'You missed every target by exactly one. That should not feel this good.':'The target is a trap. Come back and miss better.';$('#streakResult').textContent=state.streak;$('#bestResult').textContent=state.best+'/5';screen('results')}
-function share(){let blocks=run.results.map(x=>x?'🟩':'🟥').join('');let text='ONE OFF '+(run.daily?dayKey():'Practice')+'\n'+blocks+' '+run.score+'/5\n🎯 Miss perfectly.';if(navigator.share)navigator.share({title:'ONE OFF',text}).catch(()=>{});else navigator.clipboard.writeText(text).then(()=>toast('Result copied!'))}
-function toast(t){let e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),1600)}
-function bind(id,event,fn){const el=document.getElementById(id);if(el)el.addEventListener(event,fn,{passive:false})}
-bind('playBtn','click',()=>start(true));bind('practiceBtn','click',()=>start(false));bind('againBtn','click',()=>start(false));bind('shareBtn','click',share);bind('statsBtn','click',()=>$('#modal').classList.remove('hidden'));bind('closeModal','click',()=>$('#modal').classList.add('hidden'));bind('modal','click',e=>{if(e.target.id==='modal')$('#modal').classList.add('hidden')});
-$('#dailyLabel').textContent="TODAY'S RUN • "+dayKey();updateStats();window.addEventListener('pageshow',updateStats);
+/* Home and stats only; all gameplay uses play-v2.js. */
+(function () {
+  'use strict';
+  const core = OneOffCore, store = core.createStore(() => localStorage);
+  const el = id => document.getElementById(id);
+  function updateStats() {
+    const s = store.read(), today = core.dayKey(), streak = core.currentStreak(s, today);
+    const best = s.runs ? s.best + '/5' : '—';
+    for (const [id, value] of Object.entries({ streakHome: streak, bestHome: best, playsHome: s.runs,
+      modalRuns: s.runs, modalBest: best, modalStreak: streak })) el(id).textContent = value;
+    el('dailyLabel').textContent = "TODAY'S RUN • " + today;
+    el('perfectTimeHome').textContent = s.bestPerfectTime ? 'FASTEST PERFECT • ' + s.bestPerfectTime + ' SEC' : '';
+    const next = [3, 7, 14, 30].find(n => n > streak) || (Math.floor(streak / 10) + 1) * 10;
+    el('milestone').textContent = streak ? '🔥 ' + streak + ' day streak • ' + (next - streak) + ' to ' + next : 'Start your first streak today.';
+    const done = s.dailyScores[today] !== undefined;
+    el('playBtn').textContent = done ? 'PLAY TODAY AGAIN • ' + s.dailyScores[today] + '/5' : "PLAY TODAY'S 5";
+    el('returnNote').textContent = done ? 'Today is complete. Replays keep your first score. A fresh Daily arrives tomorrow.' : '';
+    el('storageNote').textContent = store.available ? '' : 'Stats cannot be saved in this browser. You can still play.';
+  }
+  const dialog = el('modal');
+  el('statsBtn').onclick = () => { updateStats(); dialog.showModal(); };
+  el('closeModal').onclick = () => dialog.close();
+  dialog.onclick = event => { if (event.target === dialog) dialog.close(); };
+  window.addEventListener('pageshow', updateStats);
+  window.addEventListener('storage', updateStats);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) updateStats(); });
+  updateStats();
+})();
