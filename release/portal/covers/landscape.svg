@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+ <defs><radialGradient id="bg" cx="50%" cy="0%" r="100%"><stop stop-color="#2c354b"/><stop offset="1" stop-color="#090b10"/></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="43.199999999999996"/></filter></defs>
+ <rect width="100%" height="100%" fill="url(#bg)"/>
+ <circle cx="960" cy="756" r="518.4000000000001" fill="#b8ff39" opacity=".12" filter="url(#glow)"/>
+ <g fill="none" stroke="#3b465c" stroke-width="7.199999999999999" opacity=".6"><circle cx="960" cy="745.1999999999999" r="226.79999999999998"/><circle cx="960" cy="745.1999999999999" r="324"/></g>
+ <g transform="translate(960,745.1999999999999) rotate(-8)"><rect x="-345.59999999999997" y="-201.6" width="326.40000000000003" height="326.40000000000003" rx="61.44" fill="#b8ff39"/><rect x="28.799999999999997" y="-163.20000000000002" width="326.40000000000003" height="326.40000000000003" rx="61.44" fill="#202738" stroke="#526078" stroke-width="7.199999999999999"/>
+ <path d="M-259.20000000000005 -48 l48 51.839999999999996 l96 -124.80000000000001" fill="none" stroke="#0b0d12" stroke-width="23.04" stroke-linecap="round" stroke-linejoin="round"/>
+ <path d="M126.72 -67.2 l130.56 124.80000000000001 m0 -124.80000000000001 l-130.56 124.80000000000001" fill="none" stroke="#ff6b82" stroke-width="17.279999999999998" stroke-linecap="round"/></g>
+ <text x="960" y="453.59999999999997" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="324" font-weight="bold" letter-spacing="-21.060000000000002" fill="#f7f8fb">ONE <tspan fill="#b8ff39">OFF</tspan></text></svg>
